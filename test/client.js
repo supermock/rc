@@ -15,7 +15,7 @@ try {
     console.log('result.stderr', stderr);
   });
 
-  rcc.call(RCType.Function, 'mock.func', 'Hello World', 'Coxinha', (error, result) => {
+  rcc.call(RCType.Function, 'mock.func', 'Hello World', (error, result) => {
     console.log('RCType.Function.error', error);
     console.log('RCType.Function.result', result);
   });
@@ -30,11 +30,19 @@ try {
     console.log('RCType.Promise.error', error);
   });
 
-  const closeLongLiving = rcc.call(RCType.LongLiving, 'mock.longLiving', 'Hello World', result => {
+  let closeLongLiving = null;
+  const handler = result => {
     console.log('RCType.LongLiving.index', result);
 
-    if (result.indexOf('5') > -1) closeLongLiving();
-  });
+    if (result.indexOf('5') > -1) {
+      rcc.call(RCType.UnrefFunc, 'mock.removeListener', 'LongLiving', handler);
+      closeLongLiving();
+    }
+  };
+
+  closeLongLiving = rcc.call(RCType.LongLiving, 'mock.on', 'LongLiving', handler);
+
+  rcc.call(RCType.Function, 'mock.longLiving', ()=>{});
 } catch(err) {
   console.log('ERROR: %s', err);
 }

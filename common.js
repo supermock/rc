@@ -1,3 +1,23 @@
+const util = require('util');
+
+Array.prototype.matchResults = function(what) {
+  return this.filter(function(item) {
+      return item.indexOf(what) > -1;
+  });
+}
+
+Array.prototype.matchIndexes = function(what) {
+  let indexes = [];
+
+  for(let i = 0; i < this.length; i++) {
+    if (this[i].indexOf(what) > -1) {
+      indexes.push(i);
+    }
+  }
+
+  return indexes;
+}
+
 // /**
 //  * RCType.Function
 //  */
@@ -42,13 +62,21 @@ const RCType = {
   Function: 1, //return
   Callback: 2, //callback()
   Promise: 3, //.then().catch()
-  LongLiving: 4 //on()
+  LongLiving: 4, //on()
+  UnrefFunc: 5,
+  name(id) {
+    const name = Object.keys(this).filter(key => this[key] == id);
+    return name.length ? name[0] : null;
+  }
 };
 
-function RCError(message) {
+function RCError(message, extra) {
+  Error.captureStackTrace(this, this.constructor);
+  this.name = this.constructor.name;
   this.message = message;
-  this.__proto__ = Error.prototype;
+  this.extra = extra;
 }
+util.inherits(RCError, Error);
 
 module.exports = {
   RCType,

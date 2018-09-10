@@ -1,6 +1,7 @@
 const net = require('net');
 
 const { RCType, RCError } = require('./common');
+const Essentials = require('./essentials');
 
 function RCClient(options) {
   if (!(this instanceof RCClient)) return new RCClient(options);
@@ -27,7 +28,7 @@ RCClient.prototype._parseCommand = function(command) {
 
 RCClient.prototype._parseArguments = function(args) {
   return {
-    args: args.map(arg => typeof arg == 'function' ? 'RCFunction' : arg)
+    args: args.map(arg => typeof arg == 'function' ? `RCFunction-${Essentials.encodeB64(arg.name + arg.length)}` : arg)
   };
 }
 
@@ -58,17 +59,16 @@ RCClient.prototype.call = function(type, command) {
   const bundle = this._makeBundle(type, command, args);
 
   switch(type) {
+    case RCType.UnrefFunc:
     case RCType.Function:
-      if (typeof args[args.length - 1] != 'function') throw new RCError('RCType.Function the last argument is a function');
+      if (typeof args[args.length - 1] != 'function') throw new RCError(`RCType.${RCType.name(bundle.type)} the last argument is a function`);
       break;
     case RCType.Callback:
-      if (bundle.args.indexOf('RCFunction') == -1) throw new RCError('RCType.Callback have one callback in parameters');
+    case RCType.LongLiving:
+      if (bundle.args.matchIndexes('RCFunction').length == 0) throw new RCError(`RCType.${RCType.name(bundle.type)} have one callback in parameters`);
       break;
     case RCType.Promise:
       if (typeof args[args.length - 1] != 'function' || typeof args[args.length - 2] != 'function') throw new RCError('RCType.Promise have two callbacks in parameters (then(), catch())');
-      break;
-    case RCType.LongLiving:
-      if (bundle.args.indexOf('RCFunction') == -1) throw new RCError('RCType.LongLiving have one callback in parameters');
       break;
     default:
       throw new RCError('RCType nonexistent');
@@ -80,6 +80,9 @@ RCClient.prototype.call = function(type, command) {
     const payload = this._parsePayload(buffer);
 
     switch(type) {
+      case RCType.UnrefFunc:
+        client.end();
+        break;
       case RCType.Function:
         args[args.length - 1].call(null, payload.throw, payload.arg);
         client.end();
