@@ -33,7 +33,7 @@ function RCServer(options) {
           try {
             response.payload.arg = action.method.apply(action.module, bundle.args);
           } catch (error) {
-            response.payload.throw = error;
+            response.payload.throw = new RCError(error.message);
           }
 
           if (bundle.type == RCType.UnrefFunc) {
@@ -66,7 +66,7 @@ function RCServer(options) {
 
             action.method.apply(action.module, bundle.args);
           } catch(error) {
-            this._send(connection, this._makeResponse(error));
+            this._send(connection, this._makeResponse(new RCError(error.message)));
           }
           break;
         case RCType.Promise:
@@ -83,7 +83,7 @@ function RCServer(options) {
               }));
             });
           } catch(error) {
-            this._send(connection, this._makeResponse(error));
+            this._send(connection, this._makeResponse(new RCError(error.message)));
           }
           break;
         default:

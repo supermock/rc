@@ -42,6 +42,11 @@ RCClient.prototype._parsePayload = function(buffer) {
     response.error.__proto__ = RCError.prototype;
     throw response.error;
   }
+
+  if (response.payload.throw) {
+    response.payload.throw.__proto__ = RCError.prototype;
+  }
+
   return response.payload;
 }
 
@@ -56,67 +61,79 @@ RCClient.prototype._parsePayload = function(buffer) {
 **/
 RCClient.prototype.call = function(type, command) {
   const args = Array.prototype.slice.call(arguments, 2);
-  const bundle = this._makeBundle(type, command, args);
 
-  switch(type) {
-    case RCType.UnrefFunc:
-    case RCType.Function:
-      if (typeof args[args.length - 1] != 'function') throw new RCError(`RCType.${RCType.name(bundle.type)} the last argument is a function`);
-      break;
-    case RCType.Callback:
-    case RCType.LongLiving:
-      if (bundle.args.matchIndexes('RCFunction').length == 0) throw new RCError(`RCType.${RCType.name(bundle.type)} have one callback in parameters`);
-      break;
-    case RCType.Promise:
-      if (typeof args[args.length - 1] != 'function' || typeof args[args.length - 2] != 'function') throw new RCError('RCType.Promise have two callbacks in parameters (then(), catch())');
-      break;
-    default:
-      throw new RCError('RCType nonexistent');
-  }
+  return function(errorCallback) {
+    try {
+      const bundle = this._makeBundle(type, command, args);
 
-  const client = this._connect();
+      switch(type) {
+        case RCType.UnrefFunc:
+        case RCType.Function:
+          if (typeof args[args.length - 1] != 'function') throw new RCError(`RCType.${RCType.name(bundle.type)} the last argument is a function`);
+          break;
+        case RCType.Callback:
+        case RCType.LongLiving:
+          if (bundle.args.matchIndexes('RCFunction').length == 0) throw new RCError(`RCType.${RCType.name(bundle.type)} have one callback in parameters`);
+          break;
+        case RCType.Promise:
+          if (typeof args[args.length - 1] != 'function' || typeof args[args.length - 2] != 'function') throw new RCError('RCType.Promise have two callbacks in parameters (then(), catch())');
+          break;
+        default:
+          throw new RCError('RCType nonexistent');
+      }
 
-  const dataHandler = buffer => {
-    const payload = this._parsePayload(buffer);
+      const client = this._connect();
 
-    switch(type) {
-      case RCType.UnrefFunc:
-        client.end();
-        break;
-      case RCType.Function:
-        args[args.length - 1].call(null, payload.throw, payload.arg);
-        client.end();
-        break;
-      case RCType.Callback:
-        args[payload.index].apply(null, payload.args);
-        client.end();
-        break;
-      case RCType.Promise:
-        if (payload.then) {
-          args[args.length - 2].apply(null, payload.then);
-        } else {
-          args[args.length - 1].apply(null, payload.catch);
+      const dataHandler = buffer => {
+        try {
+          const payload = this._parsePayload(buffer);
+
+          switch(type) {
+            case RCType.UnrefFunc:
+              client.end();
+              break;
+            case RCType.Function:
+              args[args.length - 1].call(null, payload.throw, payload.arg);
+              client.end();
+              break;
+            case RCType.Callback:
+              args[payload.index].apply(null, payload.args);
+              client.end();
+              break;
+            case RCType.Promise:
+              if (payload.then) {
+                args[args.length - 2].apply(null, payload.then);
+              } else {
+                args[args.length - 1].apply(null, payload.catch);
+              }
+              client.end();
+              break;
+            case RCType.LongLiving:
+              args[payload.index].apply(null, payload.args);
+              break;
+          }
+        } catch(error) {
+          client.emit('error', error);
+          client.end();
         }
-        client.end();
-        break;
-      case RCType.LongLiving:
-        args[payload.index].apply(null, payload.args);
-        break;
+      }
+
+      client.on('connect', () => {
+        client.write(Buffer.from(JSON.stringify(bundle)));
+      }).on('error', error => {
+        errorCallback(error);
+      });
+
+      if (type == RCType.LongLiving) {
+        client.on('data', dataHandler);
+        return client.end.bind(client);
+      } else {
+        client.once('data', dataHandler);
+      }
+    } catch(error) {
+      errorCallback(error);
     }
-  };
-
-  client.on('connect', () => {
-    client.write(Buffer.from(JSON.stringify(bundle)));
-  }).on('error', error => {
-    throw error;
-  });
-
-  if (type == RCType.LongLiving) {
-    client.on('data', dataHandler);
-    return client.end.bind(client);
-  } else {
-    client.once('data', dataHandler);
-  }
+  }.bind(this);
 }
 
 module.exports = RCClient;
