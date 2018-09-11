@@ -1,6 +1,6 @@
 const net = require('net');
 
-const { RCType, RCError } = require('./common');
+const { RCType, RCError, normalizeToRCError } = require('./common');
 const Essentials = require('./essentials');
 
 function RCClient(options) {
@@ -17,7 +17,7 @@ RCClient.prototype._parseCommand = function(command) {
   const parts = command.split('.');
 
   if (parts.length != 2) {
-    throw new RCError('Por favor passe o comando no formato prefixo.assinatura');
+    throw new RCError('Please pass the command in format prefix.signature');
   }
 
   return {
@@ -39,12 +39,11 @@ RCClient.prototype._makeBundle = function(type, command, args) {
 RCClient.prototype._parsePayload = function(buffer) {
   const response = JSON.parse(buffer.toString('utf8'));
   if (response.error) {
-    response.error.__proto__ = RCError.prototype;
-    throw response.error;
+    throw normalizeToRCError(response.error);
   }
 
   if (response.payload.throw) {
-    response.payload.throw.__proto__ = RCError.prototype;
+    response.payload.throw = normalizeToRCError(response.payload.throw);
   }
 
   return response.payload;
@@ -59,11 +58,10 @@ RCClient.prototype._parsePayload = function(buffer) {
  *  rcc.call(RCType.Promise, 'Module.method', param1, param2, ..., (arg1, arg2, ...) => {//then}, (arg1, arg2, ...) => {//catch})
  *  const stop = rcc.call(RCType.LongLiving, 'Module.method', param1, param2, ..., (arg1, arg2, ...) => {}); stop();
 **/
-RCClient.prototype.call = function(type, command) {
-  const args = Array.prototype.slice.call(arguments, 2);
-
-  return function(errorCallback) {
+RCClient.prototype.call = function(type, command, errorCallback) {
+  return function() {
     try {
+      const args = Array.prototype.slice.call(arguments);
       const bundle = this._makeBundle(type, command, args);
 
       switch(type) {
@@ -116,12 +114,12 @@ RCClient.prototype.call = function(type, command) {
           client.emit('error', error);
           client.end();
         }
-      }
+      };
 
       client.on('connect', () => {
         client.write(Buffer.from(JSON.stringify(bundle)));
       }).on('error', error => {
-        errorCallback(error);
+        errorCallback(normalizeToRCError(error));
       });
 
       if (type == RCType.LongLiving) {
@@ -131,7 +129,7 @@ RCClient.prototype.call = function(type, command) {
         client.once('data', dataHandler);
       }
     } catch(error) {
-      errorCallback(error);
+      errorCallback(normalizeToRCError(error));
     }
   }.bind(this);
 }

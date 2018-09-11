@@ -1,6 +1,6 @@
 const net = require('net');
 
-const { RCType, RCError } = require('./common');
+const { RCType, RCError, normalizeToRCError } = require('./common');
 
 function RCServer(options) {
   if (!(this instanceof RCServer)) return new RCServer(options);
@@ -33,7 +33,7 @@ function RCServer(options) {
           try {
             response.payload.arg = action.method.apply(action.module, bundle.args);
           } catch (error) {
-            response.payload.throw = new RCError(error.message);
+            response.payload.throw = normalizeToRCError(error);
           }
 
           if (bundle.type == RCType.UnrefFunc) {
@@ -66,7 +66,7 @@ function RCServer(options) {
 
             action.method.apply(action.module, bundle.args);
           } catch(error) {
-            this._send(connection, this._makeResponse(new RCError(error.message)));
+            this._send(connection, this._makeResponse(normalizeToRCError(error)));
           }
           break;
         case RCType.Promise:
@@ -79,11 +79,11 @@ function RCServer(options) {
             }).catch(function() {
               that._send(connection, that._makeResponse(null, {
                 then: null,
-                catch: Array.from(arguments)
+                catch: Array.from(arguments).map(arg => arg instanceof Error ? normalizeToRCError(arg) : arg)
               }));
             });
           } catch(error) {
-            this._send(connection, this._makeResponse(new RCError(error.message)));
+            this._send(connection, this._makeResponse(normalizeToRCError(error)));
           }
           break;
         default:

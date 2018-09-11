@@ -78,7 +78,21 @@ function RCError(message, extra) {
 }
 util.inherits(RCError, Error);
 
+function normalizeToRCError(error) {
+  if (error instanceof RCError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return new RCError(error.message);
+  }
+  
+  error.__proto__ = RCError.prototype;
+  return error;
+}
+
 module.exports = {
+  normalizeToRCError,
   RCType,
   RCError
 };
