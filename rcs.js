@@ -104,7 +104,7 @@ RCServer.prototype._argsHasRCFunction = function(args) {
 }
 
 RCServer.prototype._isRCFunction = function(arg) {
-  return arg.indexOf('RCFunction') > -1;
+  return typeof arg == 'string' && arg.indexOf('RCFunction') > -1;
 };
 
 RCServer.prototype._makeResponse = function(error, payload) {

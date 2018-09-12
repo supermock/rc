@@ -2,7 +2,7 @@ const util = require('util');
 
 Array.prototype.matchResults = function(what) {
   return this.filter(function(item) {
-      return item.indexOf(what) > -1;
+      return typeof item == 'string' && item.indexOf(what) > -1;
   });
 }
 
@@ -10,7 +10,7 @@ Array.prototype.matchIndexes = function(what) {
   let indexes = [];
 
   for(let i = 0; i < this.length; i++) {
-    if (this[i].indexOf(what) > -1) {
+    if (typeof this[i] == 'string' && this[i].indexOf(what) > -1) {
       indexes.push(i);
     }
   }

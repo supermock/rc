@@ -3,20 +3,20 @@ const options = require('./options');
 
 const rcc = new RCClient(options);
 
-// const child_process = {
-//   exec: rcc.call(RCType.Callback, 'child_process.exec', error => console.log('child_process.exec %s', error))
-// };
+const child_process = {
+  exec: rcc.call(RCType.Callback, 'child_process.exec', error => console.log('child_process.exec %s', error))
+};
 
-// child_process.exec('echo "Hello World"', (error, stdout, stderr) => {
-//   if (error) {
-//     error.message = `Command failed: echo "Hello World"\n${stderr}`;
-//     error.__proto__ = Error.prototype;
-//   }
+child_process.exec('echo "Hello World"', (error, stdout, stderr) => {
+  if (error) {
+    error.message = `Command failed: echo "Hello World"\n${stderr}`;
+    error.__proto__ = Error.prototype;
+  }
 
-//   console.log('result.error %s', error);
-//   console.log('result.stdout', stdout);
-//   console.log('result.stderr', stderr);
-// });
+  console.log('result.error %s', error);
+  console.log('result.stdout', stdout);
+  console.log('result.stderr', stderr);
+});
 
 const Mock = {
   func: rcc.call(RCType.Function, 'mock.func', error => console.log.bind(console, 'mock.func %s', error)),
