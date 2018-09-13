@@ -2,6 +2,12 @@
 
 Remote Caller Rays is a simple project in the form of client and server, that you can make available methods that will be executed on the server and returned to the client on another host for example. Much like an RPC.
 
+# Installation
+
+```sh
+$ npm i --save rcr
+```
+
 # How to use?
 
 ### Server definition

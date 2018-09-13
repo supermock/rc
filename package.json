@@ -1,0 +1,29 @@
+{
+  "name": "rcr",
+  "version": "1.0.0",
+  "description": "Remote method calls, similar to an RPC",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supermock/rcr.git"
+  },
+  "keywords": [
+    "RPC",
+    "remote",
+    "caller",
+    "methods",
+    "modules"
+  ],
+  "author": "SuperMock",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/supermock/rcr/issues"
+  },
+  "homepage": "https://github.com/supermock/rcr#readme"
+}

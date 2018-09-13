@@ -2,6 +2,12 @@
 
 Raios de Chamadas Remotas é um projeto simples na forma cliente e servidor, que você pode disponibilizar métodos que serão executados no servidor e devolvido ao cliente em outro host por exemplo. Muito parecido com um RPC.
 
+# Instalação
+
+```sh
+$ npm i --save rcr
+```
+
 # Como usar?
 
 ### Definição do servidor
