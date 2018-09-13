@@ -19,7 +19,7 @@ Array.prototype.matchIndexes = function(what) {
 }
 
 // /**
-//  * RCType.Function
+//  * RCRType.Function
 //  */
 // response = {
 //   error: null,
@@ -29,7 +29,7 @@ Array.prototype.matchIndexes = function(what) {
 //   }
 // };
 // /**
-//  * RCType.Callback
+//  * RCRType.Callback
 //  */
 // response = {
 //   error: null,
@@ -39,7 +39,7 @@ Array.prototype.matchIndexes = function(what) {
 //   }
 // };
 // /**
-//  * RCType.Promise
+//  * RCRType.Promise
 //  */
 // response = {
 //   error: null,
@@ -49,7 +49,7 @@ Array.prototype.matchIndexes = function(what) {
 //   }
 // };
 // /**
-//  * RCType.LongLiving
+//  * RCRType.LongLiving
 //  */
 // response = {
 //   error: null,
@@ -58,7 +58,7 @@ Array.prototype.matchIndexes = function(what) {
 //     args: [1,2,3]
 //   }
 // };
-const RCType = {
+const RCRType = {
   Function: 1, //return
   Callback: 2, //callback()
   Promise: 3, //.then().catch()
@@ -70,29 +70,29 @@ const RCType = {
   }
 };
 
-function RCError(message, extra) {
+function RCRError(message, extra) {
   Error.captureStackTrace(this, this.constructor);
   this.name = this.constructor.name;
   this.message = message;
   this.extra = extra;
 }
-util.inherits(RCError, Error);
+util.inherits(RCRError, Error);
 
-function normalizeToRCError(error) {
-  if (error instanceof RCError) {
+function normalizeToRCRError(error) {
+  if (error instanceof RCRError) {
     return error;
   }
 
   if (error instanceof Error) {
-    return new RCError(error.message);
+    return new RCRError(error.message);
   }
   
-  error.__proto__ = RCError.prototype;
+  error.__proto__ = RCRError.prototype;
   return error;
 }
 
 module.exports = {
-  normalizeToRCError,
-  RCType,
-  RCError
+  normalizeToRCRError,
+  RCRType,
+  RCRError
 };

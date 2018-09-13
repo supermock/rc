@@ -1,16 +1,16 @@
-const { RCServer } = require('../');
+const { RCRServer } = require('../');
 const options = require('./options');
 const child_process = require('child_process');
 const Mock = require('./mock');
 
 try {
-  const rcs = new RCServer(options);
+  const rcrs = new RCRServer(options);
 
-  rcs.registerModule('child_process', child_process);
+  rcrs.registerModule('child_process', child_process);
 
-  rcs.registerModule('mock', new Mock());
+  rcrs.registerModule('mock', new Mock());
 
-  rcs.listen();
+  rcrs.listen();
 } catch(error) {
-  console.log("Failed on start RCServer. %s", error);
+  console.log("Failed on start RCRServer. %s", error);
 }

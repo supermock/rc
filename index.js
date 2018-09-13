@@ -1,10 +1,10 @@
-const RCServer = require('./rcs.js');
-const RCClient = require('./rcc.js');
-const { RCType, RCError } = require('./common');
+const RCRServer = require('./rcrs.js');
+const RCRClient = require('./rcrc.js');
+const { RCRType, RCRError } = require('./common');
 
 module.exports = {
-  RCServer,
-  RCClient,
-  RCType,
-  RCError
+  RCRServer,
+  RCRClient,
+  RCRType,
+  RCRError
 };
